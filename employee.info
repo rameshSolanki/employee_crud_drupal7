@@ -1,0 +1,9 @@
+name = Employee
+description = Employee CRUD.
+version = 7.x-1.x-dev
+core = 7.x
+
+dependencies[] = jquery_update
+dependencies[] = overlay
+stylesheets[all][] = /css/employee.css
+scripts[] = /js/employee.js

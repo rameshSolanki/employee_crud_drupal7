@@ -1,0 +1,31 @@
+<?php
+  function employee_schema() {
+    $schema['employee_tb'] = array(
+
+      'description' => 'The base table for employee.',
+      'fields' => array(
+        'emp_id' => array(
+          'description' => 'The primary identifier for a employee record.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+
+        'emp_name' => array(
+            'description' => 'Name',
+            'type' => 'text',
+            'not null' => FALSE,
+          ),
+
+          'emp_email' => array(
+            'description' => 'Email address',
+            'type' => 'text',
+            'not null' => FALSE,
+        ),
+
+         ),
+         'primary key' => array('emp_id'),
+        );
+
+         return $schema;
+  }

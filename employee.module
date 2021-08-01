@@ -1,0 +1,218 @@
+<?php
+require_once ('employee.theme.inc');
+  function employee_help($path, $arg) {
+    switch ($path) {
+        case "admin/help#employee":
+            return '<p>' . t("Displays links to employee") . '</p>';
+            break;
+    }
+}
+
+function employee_list() {
+    // select all rows from books table
+    $query = db_select('employee_tb', 'tr')
+            ->fields('tr');
+$result = $query->execute();
+
+$output = theme('employee_list', array('data'=> $result));
+return $output;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function employee_menu() {
+  $items = array();
+
+   $items['employee1'] = array(
+        'title'             =>  'Employee',  //page title
+        'description'       =>  'Employee Information',  //description show when mouse hover on link
+        'page callback'     =>  'employee_list',  //callback function which is invoked when menu item is called.
+        'access callback'   =>  true,  //any user can access this page
+       );
+
+  $items['employee/add'] = array(
+    'title' => 'Add employee',
+    'page callback' => 'drupal_get_form',
+	'page arguments' => array('employee_add'),
+    'access arguments' => array('access page manager'),
+    'expanded' => TRUE,
+  );
+
+   $items['employee/edit'] = array(
+    'title' => 'Edit Page',
+    'page callback' => 'drupal_get_form',
+	'page arguments' => array('employee_edit'),
+    'access arguments' => array('access page manager'),
+    'expanded' => FALSE,
+  );
+
+  $items['employee/delete'] = array(
+    'title' => 'Delete Page',
+    'page callback' => 'employee_delete',
+    'access arguments' => array('access page manager'),
+    'expanded' => FALSE,
+  );
+
+  $items['employee/add'] = array(
+    'title' => 'Add employee',
+    'page callback' => 'drupal_get_form',
+	'page arguments' => array('employee_form'),
+    'access arguments' => array('access page manager'),
+    'expanded' => TRUE,
+  );
+
+    return $items;
+}
+
+function employee_search($form, &$form_submit){
+
+	$form['name'] = array(
+		'#title' => t('Name'),
+		'#type' => 'textfield',
+	);
+
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => 'Search',
+	);
+  return $form;
+}
+
+function employee_search_submit($form, &$form_state){
+	//kpr($form);exit;
+	$name = $form_state['values']['name'];
+	// if(isset($_GET['name']) && !empty($_GET['name'])){
+  //   $result = db_query("SELECT * FROM employee WHERE name = {$_GET[$name]}");
+
+  //   }
+
+  drupal_set_message(t('Search submitted successfully.' .$name));
+//	$form_state['redirect'] = 'employee';
+}
+
+// function display_employee_form()
+// {
+//     return drupal_get_form(employee_form);
+// }
+
+function employee_delete(){
+	$result = db_query("DELETE FROM employee_tb where emp_id={$_GET['emp_id']}");
+	header("Location: employee");
+}
+
+function employee_edit($form, &$form_submit){
+
+	if(isset($_GET['emp_id']) && !empty($_GET['emp_id'])){
+	$result = db_query("SELECT * FROM employee_tb WHERE emp_id = {$_GET['emp_id']}");
+	$row = array();
+	foreach($result as $record){
+		$row = (array)$record;
+	}
+	}
+	$form['id'] = array(
+		'#value' => $row['emp_id'],
+		'#type' => 'hidden',
+	);
+
+	$form['name'] = array(
+		'#title' => t('Name'),
+		'#type' => 'textfield',
+		'#default_value' => $row['emp_name'],
+	);
+	$form['email'] = array(
+		'#title' => t('Email Address'),
+		'#type' => 'textfield',
+		'#default_value' => $row['emp_email'],
+	);
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => 'Submit',
+	);
+	//kpr($form);
+	return $form;
+}
+
+function employee_edit_submit($form, &$form_state){
+	//kpr($form);exit;
+	$name = $form_state['values']['name'];
+	$email = $form_state['values']['email'];
+
+	$id = $form_state['values']['emp_id'];
+	$result = db_query("UPDATE employee_tb SET emp_name='{$name}', emp_email='{$email}' WHERE emp_id = {$id}");
+	$form_state['redirect'] = 'employee';
+}
+
+
+function employee_form($form, &$form_state){
+  $form = array();
+
+  $form['ajax_markup'] = array(
+  '#type' => 'markup',
+  '#prefix' => '
+  <div class="row">
+  <div class="container">
+  <div class="col-sm-6">
+  <span id="error"></span>',
+  '#markup' => '',
+  );
+
+  $form['name'] = array(
+  '#type' => 'textfield',
+  '#title' => 'Name',
+  '#size' => 40,
+  '#maxlength' =>120,
+  '#required' => true,
+  '#attributes' => array(
+  'placeholder' => t('Name (Required)'),
+    ),
+
+  );
+
+  $form['email'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Email address',
+    '#size' => 40,
+    '#maxlength' =>120,
+    '#required' => true,
+    '#attributes' => array(
+    'placeholder' => t('Email (Required)'),
+    ),
+    );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit',
+    // '#ajax' => array(
+    //   'callback' => 'employee_send_message',
+    //   'wrapper' => 'error',
+    //   'method' => 'html',
+    //   'effect' => 'fade',
+    // ),
+  );
+
+  $form['#suffix'] = '</div></div></div>';
+  return $form;
+}
+
+function employee_form_validate($form, &$form_state) {
+   $email = $form_state['values']['email'];
+    if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+        form_set_error('email', t('Please enter valid email address'));
+        return FALSE;
+    }
+    return TRUE;
+}
+function employee_form_submit($form, &$form_state){
+	//kpr($form);exit;
+  if (!form_get_errors()) {
+	$name = $form_state['values']['name'];
+	$email = $form_state['values']['email'];
+	$result = db_query("INSERT INTO employee_tb (emp_name, emp_email) VALUES ('{$name}', '{$email}')");
+	$form_state['redirect'] = 'employee';
+  }
+}
+
+
+
+
